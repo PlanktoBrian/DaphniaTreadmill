@@ -8,9 +8,10 @@ Created on Wed Apr 12 20:47:53 2023
 import pygame
 from datetime import datetime
 
+
 # define button class
 class col_button:
-    def __init__(self,pos,size,col,which):
+    def __init__(self, pos, size, col, which):
         # pos: touple with top left coordinates
         # size: touple with width and height
         # what color does the button stand for (and also sets)
@@ -21,6 +22,23 @@ class col_button:
     
     def show(self,surface):
         pygame.draw.rect(surface, self.col, self.rect)
+        
+# define class for rezising buttons        
+class size_button:
+    def __init__(self, pos, size, col, step):
+        self.rect = pygame.Rect(pos,size)
+        self.col = col
+        self.step = step
+    
+    def show(self, surface):
+        pygame.draw.rect(surface, self.col, self.rect)
+        
+    def click(self, size):
+        size += self.step
+        if size < 2:
+            size = 2
+        return size
+    
 
 pacman_radius = 20
 
@@ -34,6 +52,7 @@ PURPLE = (255,   0, 255)
 YELLOW = (255, 255,   0)
 CYAN = (    0, 255, 255)
 GRAY  = ( 128, 128, 128)
+DGRAY = (  64,  64,  64)
 
 # initial colors used
 background_color = BLACK
@@ -73,7 +92,12 @@ s_o = col_button((40,230),(20,20),BLACK,1)
 w_o = col_button((40,260),(20,20),WHITE,1)
 
 col_buttons = [r_b,g_b,b_b,p_b,y_b,c_b,s_b,w_b,
-           r_o,g_o,b_o,p_o,y_o,c_o,s_o,w_o]
+               r_o,g_o,b_o,p_o,y_o,c_o,s_o,w_o]
+
+add_b = size_button((10,340),(20,20),DGRAY,2)
+sub_b = size_button((40,340),(20,20),DGRAY,-2)
+
+size_buttons = [add_b,sub_b]
 
 # main loop
 run = True
@@ -107,11 +131,15 @@ while run:
         if event.type == pygame.MOUSEBUTTONDOWN :
             x, y = event.pos
             for button in col_buttons:
-                if button.rect.collidepoint(x, y):
+                if button.rect.collidepoint(x,y):
                     if button.which == 0:
                         background_color = button.col
                     elif button.which == 1:
                         object_color = button.col
+            for button in size_buttons:
+                if button.rect.collidepoint(x,y):
+                    pacman_radius = button.click(pacman_radius)
+                    print("Radius is now: " + str(pacman_radius))
                  
     # get position of mouse
     mouse_pos = pygame.mouse.get_pos()
@@ -133,12 +161,20 @@ while run:
             pygame.draw.circle(screen,GRAY,(15,10),8)
             pygame.draw.circle(screen,RED,(15,10),5)
 
-    # show buttons with panel
-    option_box = pygame.Rect((0,20),(70,270))
-    pygame.draw.rect(screen, GRAY, option_box)
+    # show col buttons with panel
+    col_option_box = pygame.Rect((0,20),(70,270))
+    pygame.draw.rect(screen, GRAY, col_option_box)
     screen.blit(font.render("B", False, WHITE), (12, 20))
     screen.blit(font.render("O", False, WHITE), (42, 20))
     for button in col_buttons:
+        button.show(screen)
+        
+    # show size buttons
+    size_option_box = pygame.Rect((0,310),(70,60))
+    pygame.draw.rect(screen, GRAY, size_option_box)
+    screen.blit(font.render("+", False, WHITE), (14, 310))
+    screen.blit(font.render("-", False, WHITE), (47, 310))
+    for button in size_buttons:
         button.show(screen)
         
     #show pacman at mouse position 
