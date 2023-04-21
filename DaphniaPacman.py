@@ -6,7 +6,6 @@ Created on Wed Apr 12 20:47:53 2023
 """
 
 import pygame
-from PIL import Image, ImageDraw
 from datetime import datetime
 
 # define button class
@@ -23,32 +22,7 @@ class col_button:
     def show(self,surface):
         pygame.draw.rect(surface, self.col, self.rect)
 
-# function to create pie_slice with pil and convert to pygame
-def create_slice(circle_size, a_start, a_stop, object_color):
-    # create pil
-    pil_image = Image.new("RGBA", (circle_size, circle_size))
-    pil_draw = ImageDraw.Draw(pil_image)
-    pil_draw.pieslice((0, 0, circle_size-1, circle_size-1), int(a_start), int(a_stop), fill=object_color)
-    
-    # prepare conversion from pil to pygame
-    mode = pil_image.mode
-    size = pil_image.size
-    data = pil_image.tobytes()
-    
-    # return converted image
-    return pygame.image.fromstring(data, size, mode)
-
-# defining circles
-circle_size = 430
-ring_width = 110 # with ring_width < circle_size
-
-# definde angles of pie slice
-a_start = 0 # start angle at initialization
-a_width = 30 # angular size of slice
-a_stop = (a_start+a_width) % 360 # end angle at inilialization
-a_speed = 2 # angular speed per frame
-
-a_auto = 0 # initial automatic angular speed per frame
+pacman_radius = 20
 
 # predefine colors
 BLACK = (   0,   0,   0)
@@ -71,6 +45,8 @@ screen = pygame.display.set_mode((1200,800))
 pygame.display.set_caption("Daphnia Treadmill")
 font = pygame.font.SysFont('Arial', 24)
 clock = pygame.time.Clock()
+
+pygame.mouse.set_visible(False)
 
 # setup recording
 recording = False
@@ -126,15 +102,6 @@ while run:
                     recording = True
                     last = -1
                     start = datetime.now()
-            if event.key == pygame.K_d:
-                a_auto += 0.5
-                print("Auto speed: "+str(a_auto))
-            if event.key == pygame.K_a:
-                a_auto -= 0.5
-                print("Auto speed: "+str(a_auto))
-            if event.key == pygame.K_s:
-                a_auto = 0
-                print("Auto speed set to zero")
             
         # check if one of the color buttons is clicked
         if event.type == pygame.MOUSEBUTTONDOWN :
@@ -145,39 +112,19 @@ while run:
                         background_color = button.col
                     elif button.which == 1:
                         object_color = button.col
-                
-    # automatic movement
-    a_start = (a_start + a_auto) % 360
-    a_stop = (a_stop + a_auto) % 360
+                 
+    # get position of mouse
+    mouse_pos = pygame.mouse.get_pos()
     
-    # get keypresses for manual movement
-    keys = pygame.key.get_pressed()
-    if keys[pygame.K_LEFT]:
-        a_start = (a_start - a_speed) % 360
-        a_stop = (a_stop - a_speed) % 360
-    if keys[pygame.K_RIGHT]:
-        a_start = (a_start + a_speed) % 360
-        a_stop = (a_stop + a_speed) % 360              
-    
-    #log angle (one entry per second)
+    #log mouse position (one entry per second)
     if recording:
         curr = datetime.now()
         diff = curr - start
         if diff.seconds != last:
             last = diff.seconds
-            record.append(a_start)
+            record.append(mouse_pos)
     
     screen.fill(background_color) # fill screen with background color
-    
-    # create and show pie slice
-    pie_slice = create_slice(circle_size, a_start, a_stop, object_color)
-    pie_slice_rect = pie_slice.get_rect(center=screen.get_rect().center)
-    screen.blit(pie_slice, pie_slice_rect) # display at center of screen
-    # paint over center of pie slice to create a ring slice
-    pygame.draw.circle(screen,background_color,screen.get_rect().center,int((circle_size-ring_width)/2))
-    
-    #center finder
-    pygame.draw.circle(screen,GRAY,screen.get_rect().center,10)
     
     #recording blinker
     if recording:
@@ -187,16 +134,18 @@ while run:
             pygame.draw.circle(screen,RED,(15,10),5)
 
     # show buttons with panel
-    pygame.draw.rect(screen, GRAY, pygame.Rect((0,20),(70,270)))
+    option_box = pygame.Rect((0,20),(70,270))
+    pygame.draw.rect(screen, GRAY, option_box)
     screen.blit(font.render("B", False, WHITE), (12, 20))
     screen.blit(font.render("O", False, WHITE), (42, 20))
     for button in col_buttons:
         button.show(screen)
+        
+    #show pacman at mouse position 
+    pygame.draw.circle(screen,object_color,mouse_pos,pacman_radius)
 
     # display controls
-    screen.blit(font.render("R: Start/Stop recording",False, GRAY), (12, screen.get_size()[1]-100))
-    screen.blit(font.render("Arrow Keys: manually rotate slice",False, GRAY), (12, screen.get_size()[1]-70))
-    screen.blit(font.render("A,S,D: auto-rotate/stop slice",False, GRAY), (12, screen.get_size()[1]-40))
+    screen.blit(font.render("R: Start/Stop recording",False, GRAY), (12, screen.get_size()[1]-30))
     
     # show display
     pygame.display.flip()
