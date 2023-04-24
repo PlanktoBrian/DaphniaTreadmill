@@ -23,24 +23,6 @@ class col_button:
     def show(self,surface):
         pygame.draw.rect(surface, self.col, self.rect)
         
-# define class for rezising buttons        
-class size_button:
-    def __init__(self, pos, size, col, step):
-        self.rect = pygame.Rect(pos,size)
-        self.col = col
-        self.step = step
-    
-    def show(self, surface):
-        pygame.draw.rect(surface, self.col, self.rect)
-        
-    def click(self, size):
-        size += self.step
-        if size < 2:
-            size = 2
-        return size
-    
-
-pacman_radius = 20
 
 # predefine colors
 BLACK = (   0,   0,   0)
@@ -55,21 +37,16 @@ GRAY  = ( 128, 128, 128)
 DGRAY = (  64,  64,  64)
 
 # initial colors used
-background_color = BLACK
-object_color = BLUE
+left_color = BLACK
+right_color = BLUE
 
 # initialize pygame objects
 pygame.init()
 screen = pygame.display.set_mode((1200,800))
-pygame.display.set_caption("Daphnia Pacman")
+pygame.display.set_caption("Daphnia TwoSides")
 font = pygame.font.SysFont('Arial', 24)
 clock = pygame.time.Clock()
 
-pygame.mouse.set_visible(False)
-
-# setup recording
-recording = False
-blink = 0
 
 # define buttons for background color
 r_b = col_button((10,50),(20,20),RED,0)
@@ -94,10 +71,7 @@ w_o = col_button((40,260),(20,20),WHITE,1)
 col_buttons = [r_b,g_b,b_b,p_b,y_b,c_b,s_b,w_b,
                r_o,g_o,b_o,p_o,y_o,c_o,s_o,w_o]
 
-add_b = size_button((10,340),(20,20),DGRAY,2)
-sub_b = size_button((40,340),(20,20),DGRAY,-2)
-
-size_buttons = [add_b,sub_b]
+right_side = pygame.Rect((screen.get_size()[0]/2,0),(screen.get_size()[0]/2,screen.get_size()[1]))
 
 # main loop
 run = True
@@ -114,18 +88,6 @@ while run:
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
                 run = False
-            # recording
-            if event.key == pygame.K_r:
-                if recording:
-                    print("End of recording")
-                    print(record)
-                    recording = False
-                else:
-                    print("Start recording")
-                    record = []
-                    recording = True
-                    last = -1
-                    start = datetime.now()
             
         # check if one of the color buttons is clicked
         if event.type == pygame.MOUSEBUTTONDOWN :
@@ -133,55 +95,20 @@ while run:
             for button in col_buttons:
                 if button.rect.collidepoint(x,y):
                     if button.which == 0:
-                        background_color = button.col
+                        left_color = button.col
                     elif button.which == 1:
-                        object_color = button.col
-            for button in size_buttons:
-                if button.rect.collidepoint(x,y):
-                    pacman_radius = button.click(pacman_radius)
-                    print("Radius is now: " + str(pacman_radius))
-                 
-    # get position of mouse
-    mouse_pos = pygame.mouse.get_pos()
+                        right_color = button.col
     
-    #log mouse position (one entry per second)
-    if recording:
-        curr = datetime.now()
-        diff = curr - start
-        if diff.seconds != last:
-            last = diff.seconds
-            record.append(mouse_pos)
-    
-    screen.fill(background_color) # fill screen with background color
-    
-    #recording blinker
-    if recording:
-        blink = (blink+1)%30
-        if blink < 10:
-            pygame.draw.circle(screen,GRAY,(15,10),8)
-            pygame.draw.circle(screen,RED,(15,10),5)
+    screen.fill(left_color) # fill screen with color for left side
+    pygame.draw.rect(screen,right_color,right_side) # plot rectangle with color on right halve of the screen
 
     # show col buttons with panel
     col_option_box = pygame.Rect((0,20),(70,270))
     pygame.draw.rect(screen, GRAY, col_option_box)
-    screen.blit(font.render("B", False, WHITE), (12, 20))
-    screen.blit(font.render("O", False, WHITE), (42, 20))
+    screen.blit(font.render("L", False, WHITE), (12, 20))
+    screen.blit(font.render("R", False, WHITE), (42, 20))
     for button in col_buttons:
         button.show(screen)
-        
-    # show size buttons
-    size_option_box = pygame.Rect((0,310),(70,60))
-    pygame.draw.rect(screen, GRAY, size_option_box)
-    screen.blit(font.render("+", False, WHITE), (14, 310))
-    screen.blit(font.render("-", False, WHITE), (47, 310))
-    for button in size_buttons:
-        button.show(screen)
-        
-    #show pacman at mouse position 
-    pygame.draw.circle(screen,object_color,mouse_pos,pacman_radius)
-
-    # display controls
-    screen.blit(font.render("R: Start/Stop recording",False, GRAY), (12, screen.get_size()[1]-30))
     
     # show display
     pygame.display.flip()
