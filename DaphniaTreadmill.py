@@ -38,6 +38,14 @@ def create_slice(circle_size, a_start, a_stop, object_color):
     # return converted image
     return pygame.image.fromstring(data, size, mode)
 
+def create_log(data, out_path, time, prefix = "", suffix = "", ending = ".txt"):
+    file = out_path + prefix + time.strftime("%Y-%m-%d_ %H-%M-%S") + suffix + ending
+    with open(file, 'w') as f:
+        for line in data:
+            f.write(str(line))
+            f.write('\n')
+        
+
 # defining circles
 circle_size = 430
 ring_width = 110 # with ring_width < circle_size
@@ -120,6 +128,7 @@ while run:
                     print("End of recording")
                     print(record)
                     recording = False
+                    create_log(record, "logging/", start, "treadmill_")
                 else:
                     print("Start recording")
                     record = []

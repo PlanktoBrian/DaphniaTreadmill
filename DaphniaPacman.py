@@ -39,6 +39,13 @@ class size_button:
             size = 2
         return size
     
+def create_log(data, out_path, time, prefix = "", suffix = "", ending = ".txt"):
+    file = out_path + prefix + time.strftime("%Y-%m-%d_ %H-%M-%S") + suffix + ending
+    with open(file, 'w') as f:
+        for line in data:
+            f.write(str(line))
+            f.write('\n')
+    
 
 pacman_radius = 20
 
@@ -120,6 +127,7 @@ while run:
                     print("End of recording")
                     print(record)
                     recording = False
+                    create_log(record, "logging/", start, "pacman_")
                 else:
                     print("Start recording")
                     record = []
